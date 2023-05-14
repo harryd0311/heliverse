@@ -1,14 +1,29 @@
 import React, { useState } from 'react';
+import { useSelector, useDispatch } from 'react-redux';
+import {
+  setSearchQuery,
+  setSelectedDomain,
+  setSelectedGender,
+  setSelectedAvailability,
+  addToTeam,
+  removeFromTeam,
+} from './redux/actions';
 import userData from './userData.json';
 import UserCard from './UserCard';
- 
+
 function App() {
   const [currentPage, setCurrentPage] = useState(1);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [selectedDomain, setSelectedDomain] = useState('');
-  const [selectedGender, setSelectedGender] = useState('');
-  const [selectedAvailability, setSelectedAvailability] = useState('');
-  const [team, setTeam] = useState([]);
+  const dispatch = useDispatch();
+
+  // Get the state from Redux store
+  const {
+    searchQuery,
+    selectedDomain,
+    selectedGender,
+    selectedAvailability,
+  } = useSelector((state) => state.user);
+  const team = useSelector((state) => state.team);
+
   const [showTeamCards, setShowTeamCards] = useState(false);
   const usersPerPage = 20;
 
@@ -35,41 +50,41 @@ function App() {
   // Handle search query change
   const handleSearch = (e) => {
     setCurrentPage(1); // Reset to first page when search query changes
-    setSearchQuery(e.target.value);
+    dispatch(setSearchQuery(e.target.value));
   };
 
   // Handle domain filter change
   const handleDomainFilter = (e) => {
     setCurrentPage(1); // Reset to first page when domain filter changes
-    setSelectedDomain(e.target.value);
+    dispatch(setSelectedDomain(e.target.value));
   };
 
   // Handle gender filter change
   const handleGenderFilter = (e) => {
     setCurrentPage(1); // Reset to first page when gender filter changes
-    setSelectedGender(e.target.value);
+    dispatch(setSelectedGender(e.target.value));
   };
 
   // Handle availability filter change
   const handleAvailabilityFilter = (e) => {
     setCurrentPage(1); // Reset to first page when availability filter changes
-    setSelectedAvailability(e.target.value);
+    dispatch(setSelectedAvailability(e.target.value));
   };
 
   // Handle adding user to team
-  const addToTeam = (user) => {
+  const handleAddToTeam = (user) => {
     const domainExistsInTeam = team.some((teamMember) => teamMember.domain === user.domain);
     if (!domainExistsInTeam && user.available) {
-      setTeam([...team, user]);
+      dispatch(addToTeam(user));
     }
   };
 
-  const removeFromTeam = (userId) => {
-    setTeam(team.filter((member) => member.id !== userId));
+  const handleRemoveFromTeam = (userId) => {
+    dispatch(removeFromTeam(userId));
   };
 
   const handleDoneClick = () => {
-    setShowTeamCards(showTeamCards===true ? false:true);
+    setShowTeamCards(showTeamCards ? false : true);
   };
 
   return (
@@ -104,7 +119,7 @@ function App() {
       </div>
       <div className="card-container">
         {currentUsers.map((user) => (
-          <UserCard key={user.id} user={user} addToTeam={addToTeam} />
+          <UserCard key={user.id} user={user} addToTeam={handleAddToTeam} />
         ))}
       </div>
       <div className="pagination">
@@ -121,34 +136,27 @@ function App() {
         {team.length > 0 ? (
           <ul>
             {team.map((member) => (
-              <li key={member.id}><h4 className='no-member'> {member.first_name} {member.last_name}
-              <button onClick={() => removeFromTeam(member.id)}>Remove</button></h4></li>
+              <li key={member.id}>
+                <h4 className="no-member">
+                  {member.first_name} {member.last_name}
+                  <button onClick={() => handleRemoveFromTeam(member.id)}>Remove</button>
+                </h4>
+              </li>
             ))}
           </ul>
         ) : (
-          <p className='no-member'>No members in the team yet.</p>
+          <p className="no-member">No members in the team yet.</p>
         )}
       </div>
       <div className="team">
-        {/* <h2>Team</h2> */}
-        {/* Show team cards when "Done" button is clicked */}
         {showTeamCards && team.length > 0 ? (
           <div className="card-container">
             {team.map((member) => (
-              <UserCard key={member.id} user={member} addToTeam={addToTeam} />
+              <UserCard key={member.id} user={member} addToTeam={handleAddToTeam} />
             ))}
           </div>
-        ) : (
-          <p></p>
-        )}
-        {!showTeamCards && team.length > 0 ? (
-          <p></p>
-        ) : (
-          <p></p>
-        )}
-        {!showTeamCards && team.length > 0 && (
-          <button onClick={handleDoneClick}>Done</button>
-        )}
+        ) : null}
+        {!showTeamCards && team.length > 0 && <button onClick={handleDoneClick}>Done</button>}
         {showTeamCards && team.length > 0 && (
           <button onClick={handleDoneClick}>Clear</button>
         )}
