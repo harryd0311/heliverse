@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import userData from './userData.json';
 import UserCard from './UserCard';
-
+ 
 function App() {
   const [currentPage, setCurrentPage] = useState(1);
   const [searchQuery, setSearchQuery] = useState('');
